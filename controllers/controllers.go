@@ -166,7 +166,27 @@ func ProductViewerAdmin() gin.HandlerFunc {
 }
 
 func SearchProductByQuery() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		var searchProduct []models.Product
+		queryParam := c.Query("name")
 
+		// if its empty
+
+		if queryParam == "" {
+			log.Println("equery is empty")
+			c.Header("Content-Type", "application/json")
+			c.JSON(http.StatusNotFound, gin.H{
+				"error": "invalid search index",
+			})
+			c.Abort()
+			return
+		}
+
+		var ctx, cancel = context.WithTimeout(context.Background(), 100*time.Second)
+		defer cancel()
+
+		ProductCollection.Find(ctx, bson.M{"product_name": bson.M{"$regex": queryParam}})
+	}
 }
 
 func SearchProduct() gin.HandlerFunc {
